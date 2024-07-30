@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+       /* 定义卡片的样式 */
+      .cards {
+        width: 150px;
+        height: 100px;
+        background-color: white;
+        position: absolute;
+        top: 200px;
+        text-align: center
+      }
+      /* 定义卡片的样式 */
+      #main {
+        width: 600px;
+        height: 400px;
+        background-color: white;
+        /* margin: 0 auto; */
+        /* position: absolute */
+      }
+      /* 定义选择区的样式 */
+      #chose {
+        width: 600px;
+        height: 1500px;
+        background-color: dimgray;
+        color: white;
+      }
+      #c1 {
+        left: 0px
+      }
+      #c2 {
+        left: 225px
+      }
+      #c3 {
+        left: 450px
+      }
+      /* 定义卡片的样式 */
+      .card {
+        border-radius: 10px;
+        padding: 5px;
+        background-color: grey;
+      }
+      /* 定义卡片内部的样式 */
+      .card-in{
+        border-radius: 10px;
+        background-color: #663DA2;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        text-align: center;
+      }
+      /* 定义卡片内部文字的样式 */
+      .card-in div{
+        background-repeat: no-repeat;
+        text-align: center;
+        position: absolute;
+        color: grey;
+        bottom: 5px;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="cards" id="c1" onclick="choose(this.id)">
+        
+      </div>
+      <div class="cards" id="c2" onclick="choose(this.id)">
+
+      </div>
+      <div class="cards" id="c3" onclick="choose(this.id)">
+        
+      </div>
+      
+    </div>
+
+    <!-- 选择区 -->
+    <div id="chose">
+
+    </div>
+
+    
+
+
+
+
+    <script src="cards.js"></script>
+    <!-- <script src="temp.js"></script> -->
+    <script src="translation.js"></script>
+    <script src="costs.js"></script>
+    <script>
+      
+      // 初始化费用卡牌数量数组
+      var costCurDeck = Array(12).fill(0); // 费用最大为11
+
+      var nowArr = []; // 当前选中的卡片数组
+      var mainAttr; // 主要属性，用户选择的属性值
+      var choseObj = {}; // 存储已选择的卡片及其数量的对象
+      var cardsnum = 0; // 当前总共选择的卡片数量
+      var cards10 = 0; // 当前选择的卡片是否满足10张的条件计数器
+      var specialt = false; // 是否处于特殊抽卡状态的标志
+      const heroes = {
+        "坚果": [5, 6],
+        "香橼": [5, 7],
+        "萝卜": [5, 7],
+        "白菜": [5, 8],
+        "土豆": [5, 9],
+        "玫瑰": [6, 7],
+        "大嘴": [6, 8],
+        "耀斑": [6, 9],
+        "绿影": [7, 8],
+        "暗夜": [7, 9],
+        "火树": [8, 9],
+
+        "超尸": [0, 1],
+        "大王": [0, 1],
+        "女妖": [0, 2],
+        "教授": [0, 3],
+        "锈铁": [0, 4],
+        "雪人": [1, 2],
+        "无穷": [1, 3],
+        "海妖": [1, 4],
+        "舞王": [2, 3],
+        "摔跤": [2, 4],
+        "机甲": [3, 4],
+      }
+      var heroesc = false;
+
+      // 循环直到用户输入有效的英雄属性
+      while (!heroesc) {
+        let opt = prompt("请输入你的英雄：\n坚果 香橼 萝卜 白菜 土豆 玫瑰 大嘴 耀斑 绿影 暗夜 火树\n超尸 大王 女妖 教授 锈铁 雪人 无穷 海妖 舞王 摔跤 机甲");
+        if (heroes[opt] != undefined) {
+          mainAttr = heroes[opt];
+          heroesc = true;
+        } else {
+          alert("😡");
+        }
+      }
+
+      // 获取指定id的DOM元素
+      function G(id) {
+        return document.getElementById(id);
+      }
+      
+      // 调整当前显示的三张卡片
+      function adjust() {
+        if (cardsnum == 40) {
+          return alert("完成选牌");
+        }
+
+        let t1 = generate();
+        let t2 = generate();
+        let t3 = generate();
+        while (t1.name == t3.name) {
+          t1 = generate();
+        }
+        while (t1.name == t2.name || t3.name == t2.name) {
+          t2 = generate();
+        }
+
+        if (specialt) {
+          specialt = false;
+        }
+
+        nowArr.push(t1);
+        nowArr.push(t2);
+        nowArr.push(t3);
+      }
+
+
+      function generate() {
+
+        let p = Math.random();
+        let r;
+        // 特殊抓卡情况
+        if (specialt) {
+          console.log("特殊抓卡数量：" + cardsnum);
+          if (cards10 % 2 == 0) {
+            r = 3;
+          }
+          else {
+            r = Math.random() < 0.5 ? 2 : 5;
+          }
+          // nowsl = false;
+        } else {
+          if (p <= 0.05) r = 3;  // 传说
+          else if (p <= 0.11) r = 2;  // 超稀有
+          else if (p <= 0.17) r = 5;  // 活动
+          else if (p <= 0.34) r = 1;  // 稀有
+          else if (p <= 0.85) r = 0;  // 罕见
+          else r = 4;  // 普通
+        }
+
+        // 生成卡片费用范围
+        let costset;
+        
+        if (specialt) {
+          costset = [0, 11];// 特殊抓卡的费用范围是 [0, 10]todo
+        } else {
+          let q = Math.random();
+          if (q <= 0.30) costset = [0, 2];
+          else if (q <= 0.60) costset = [3, 4];
+          else if (q <= 0.85) costset = [5, 6];
+          else costset = [7, 11];
+        }
+        
+        // `find` 函数用于根据稀有度、主属性和费用范围找到符合条件的卡片名称的数组 carr
+        let carr = find(r, mainAttr, costset);
+        if (!carr.length) return generate(); // 如果没有符合条件的卡牌，则重新生成
+
+        // 随机生成一个索引
+        let rnd = Math.floor(Math.random() * carr.length); 
+        let name = carr[rnd];
+
+        // 如果已选择的卡片数量达到 4，则重新生成
+        if (choseObj[name] != undefined && choseObj[name] == 4) return generate();
+        
+        let cardobj = { name: name, num: r === 3 ? 1 : Math.floor(Math.random() * 2 + 1) };
+        if (cardobj.num + cardsnum > 40) return generate();
+
+        if (choseObj[name] != undefined && choseObj[name] + cardobj.num > 4) return generate();
+
+
+        
+        return cardobj;
+      }
+
+      adjust();
+      anal();
+      output();
+    
+      function output() {
+        G("chose").innerHTML = "";
+        G("chose").innerHTML += ('<div style="font-size: 20px; font-weight: bold;">共' + cardsnum + '/40张</div>');
+
+        let choseArr = Object.keys(choseObj).sort((a, b) => {
+          return costs[a] - costs[b];
+        });
+
+        for (let i = 0;i < choseArr.length; i++) {
+          let opt = choseArr[i];
+          G("chose").innerHTML += (choseObj[opt] + "张" + " - " + costs[opt] + '费' + " - " + translation[opt] + "<br>");
+        }
+        G("chose").innerHTML +=("<br><br>");
+        updateCardInfo(); // 在循环之后更新卡牌信息
+      }
+
+
+      // 更新已选择的卡牌信息
+      function updateCardInfo() {
+
+          // 计算并展示费用0-7和8+的卡牌数量
+          let cardCounts = costCurDeck.slice(0, 8); // 费用0-7的卡牌数量
+          let cardCount8Plus = costCurDeck.slice(8).reduce((acc, cur) => acc + cur, 0); // 费用8+的卡牌数量
+
+          // 生成展示字符串
+          let cardInfo = "";
+
+          // 左侧费用展示
+          for (let i = 0; i <= 7; i++) {
+              cardInfo += `${i}费   : ${cardCounts[i]}<br>`;
+          }
+          cardInfo += `8费+: ${cardCount8Plus}<br>`;
+
+          // 更新容器内容
+          G("chose").innerHTML += cardInfo;
+      }
+
+
+
+      function choose(id) {
+        // 从id中提取索引值 (最后一个字符)，用于识别当前点击的是哪张牌
+        let index = parseInt(id.charAt(id.length - 1));
+        let tobj = nowArr[index - 1];// 根据索引获取当前选中的牌对象
+        // 更新选择对象的数量，如果该卡片已经被选择过则增加数量
+        if (choseObj[tobj.name] != undefined) {
+          choseObj[tobj.name] += tobj.num;
+        } else {
+          choseObj[tobj.name] = tobj.num;
+        }
+
+        // 更新费用卡牌数量数组
+        costCurDeck[costs[tobj.name]] += tobj.num;
+
+
+        // 清空
+        G("c1").innerHTML = "";
+        G("c2").innerHTML = "";
+        G("c3").innerHTML = "";
+        nowArr = [];
+
+        cardsnum += tobj.num;
+        if (Math.floor((cardsnum + 1) / 10) != cards10) {
+          cards10 += 1;
+          specialt = true;
+        }
+        
+        adjust();
+        anal();
+        output();
+      }
+      
+      //展示三选一卡片图片和信息
+      function anal() {
+        if (cardsnum == 40) {
+          return;
+        }
+        for (let i = 0; i < 3; i++) {
+          let name = nowArr[i].name;
+          createcard(name, i + 1);
+          G("c" + (i + 1)).innerHTML += (translation[name] + "×" + nowArr[i].num + "<br>" + costs[name] +"费");
+          
+        }
+      }
+
+      //todo:铃铛11费
+      function find(rarity, carr, cst = [0, 11]) {
+        var xrr = [];
+        for (let j = 0; j < 2; j++) {
+          
+          let color = cards[colors[carr[j]]];
+          let arrl = color.length;
+          for (let i = 0; i < arrl; i++) {
+            let obj = color[i];
+            if (obj.rarity == rarity) {
+              if (costs[obj.name] >= cst[0] && costs[obj.name] <= cst[1]) {
+                xrr.push(obj.name);
+              }
+            }
+          }
+        }
+        return xrr;
+      }
+
+      function createcard(name, num) {
+        let card = document.createElement("div");
+        card.className = "card";
+        card.style.width = "140px";
+        card.style.height = "100px";
+
+        let cin = document.createElement("div");
+        cin.className = "card-in";
+        cin.style["font-size"] = "20px";
+
+        let img = document.createElement("img");
+        img.src = "images/" + name + ".png";
+        img.style["object-fit"] = "cover";
+        img.style["object-position"] = "50% 20%";
+        img.style.width = "130px";
+        img.style.height = "90px";
+        cin.appendChild(img);
+        card.appendChild(cin);
+        G("c" + num).append(card);
+      }
+
+
+
+      //-------
+
+      function echo(c) {
+        let color = cards[colors[c]];
+        color.forEach(obj => {
+          console.log(obj.name + ":" + translation[obj.name]);
+        });
+      }
+      
+      function extract(){
+        for (let i = 0; i < 10; i++) {
+          let cards = [];
+          // let xrr = ;
+          for (let x in xrr) {
+            let xard = xrr[x];
+            if (xard.color != colors[i]) {
+              continue;
+            }
+            if (xard.set == "Superpower" || xard.set == "Token") {
+              continue;
+            }
+            let tempc = {
+              name: xard.prefabName,
+              rarity: xard.rarity
+            };
+            kosts[xard.prefabName] = xard.displaySunCost,
+            cards.push(tempc);
+          }
+          kards[colors[i]] = cards;
+        }
+      }
+
+    </script>
+  </body>
+</html>
